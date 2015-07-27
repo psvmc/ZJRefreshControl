@@ -10,12 +10,13 @@ ios 下拉刷新 上拉加载更多 swift
 （1）定义全局对象变量
 
 ```swift
-var refreshControl:ZJRefreshControl!;
+	var refreshControl:ZJRefreshControl!;
 ```
 
 （2）初始化
 
 ```swift
+
 	//只有下拉刷新
 	refreshControl = ZJRefreshControl(scrollView: appTableView, refreshBlock: {
             self.dropViewDidBeginRefreshing()
@@ -55,6 +56,7 @@ var refreshControl:ZJRefreshControl!;
             ),
             dispatch_get_main_queue(), closure)
     }
+    
 ```
 
 （3）注意点  
