@@ -1,12 +1,13 @@
 # ZJRefreshControl
-ios 下拉刷新 上拉加载更多 swift
+`ios` `下拉刷新` `上拉加载更多` `swift`
 
 ####简介
-本组件效果参照了ODRefreshControl，用swift写成，添加了上拉加载更多  
+本组件效果参照了`ODRefreshControl`，用`swift`写成，添加了`上拉加载更多`  
 要使用本效果`swift`必须为`1.2`
 ####效果演示  
 ![效果演示](https://github.com/psvmc/ZJRefreshControl/raw/master/Images/refresh01.gif)
 ####调用方式
+（0）把该组件拖放到项目中  
 （1）定义全局对象变量
 
 ```swift
@@ -61,6 +62,15 @@ ios 下拉刷新 上拉加载更多 swift
 
 （3）注意点  
 
-+ 上拉加载和下拉刷新结束后必须调用响应的结束方法
++ `上拉加载`和`下拉刷新`结束后必须调用相应的`结束方法`
+
+```swift
+
+	//结束下拉刷新
+	self.refreshControl.endRefreshing();
+	//结束加载更多
+	self.refreshControl.endLoadingmore();
+	
+```
 + 上面的延迟调用只是模拟数据的请求中消耗的时间，使用时不用该方法
 
