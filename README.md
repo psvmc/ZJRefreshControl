@@ -15,7 +15,7 @@ var refreshControl:ZJRefreshControl!;
 
 （2）初始化
 
-
+```swift
 	//只有下拉刷新
 	refreshControl = ZJRefreshControl(scrollView: appTableView, refreshBlock: {
             self.dropViewDidBeginRefreshing()
@@ -55,6 +55,7 @@ var refreshControl:ZJRefreshControl!;
             ),
             dispatch_get_main_queue(), closure)
     }
+```
 
 （3）注意点  
 
