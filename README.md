@@ -8,9 +8,11 @@ ios 下拉刷新 上拉加载更多 swift
 ![效果演示](https://github.com/psvmc/ZJRefreshControl/raw/master/Images/refresh01.gif)
 ####调用方式
 （1）定义全局对象变量
-	
-	var refreshControl:ZJRefreshControl!;
-   
+
+```swift
+var refreshControl:ZJRefreshControl!;
+```
+
 （2）初始化
 
 
