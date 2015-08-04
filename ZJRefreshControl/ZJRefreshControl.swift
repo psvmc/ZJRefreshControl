@@ -40,6 +40,14 @@ class ZJRefreshControl: UIControl {
     private  var hasSectionHeaders:Bool = false;
     private  var shapeTintColor:UIColor!;
     
+    //记录上次距离底部的距离
+    private var tempBottomSpace:CGFloat = 0;
+    //记录连续递减的次数，解决无限加载bug
+    private var tempAdd:CGFloat = 0;
+    
+    ///上拉多少距离开始加载更多
+    internal var loadMoreSpace:CGFloat = 70;
+    
     //旋转的样式
     internal var refreshActivity:UIActivityIndicatorView!;
     internal var activityIndicatorViewStyle:UIActivityIndicatorViewStyle = UIActivityIndicatorViewStyle.Gray;
@@ -105,7 +113,21 @@ class ZJRefreshControl: UIControl {
         scrollView.addSubview(self);
         loadmoreViewAdd();
         self.scrollViewContentInsetTop = self.scrollView.contentInset.top;
+        hideRefreshView();
     }
+    
+    private func hideRefreshView(){
+        refreshShapeLayer.hidden = true;
+        refreshArrowLayer.hidden = true;
+        refreshHighlightLayer.hidden = true;
+    }
+    
+    private func showRefreshView(){
+        refreshShapeLayer.hidden = false;
+        refreshArrowLayer.hidden = false;
+        refreshHighlightLayer.hidden = false;
+    }
+    
     
     //刷新结束 记得调用该方法
     internal func endRefreshing() -> Void{
@@ -124,6 +146,7 @@ class ZJRefreshControl: UIControl {
                     self.refreshActivityHide();
                     self.layerRemove();
                     self.layerAdd();
+                    self.hideRefreshView();
             })
             
             
@@ -139,23 +162,28 @@ class ZJRefreshControl: UIControl {
     //加载更多视图的添加
     private func loadmoreViewAdd() -> Void{
         self.loadmoreActivity = UIActivityIndicatorView(activityIndicatorStyle: self.activityIndicatorViewStyle);
-        self.loadmoreActivity.frame =  CGRectMake(0, self.scrollView.contentSize.height+20 + self.scrollView.contentInset.top, self.scrollView.bounds.width, totalViewHeight);
+        self.loadmoreActivity.frame =  CGRectMake(0, self.scrollView.frame.size.height + 20, self.scrollView.bounds.width, totalViewHeight);
         self.loadmoreActivity.alpha = 0;
         self.loadmoreActivity.layer.transform = CATransform3DMakeScale(0, 0, 1);
         self.scrollView.addSubview(self.loadmoreActivity);
+        //给加载更多View留位置
+        scrollView.contentInset.bottom += 40;
     }
     
     //加载更多显示
     private func loadmoreShow() -> Void{
-        self.loadmoreActivity.center = CGPointMake(self.scrollView.frame.width/2, self.scrollView.contentSize.height + self.scrollViewContentInsetTop + 20);
+        self.loadingmore  =  true;
+        var contentSizeHeight = self.scrollView.contentSize.height;
+        
+        self.loadmoreActivity.center = CGPointMake(self.scrollView.frame.width/2, contentSizeHeight + 20);
         self.loadmoreActivity.startAnimating();
+        
         UIView.animateWithDuration(0.5, animations: {
+            
             self.loadmoreActivity.alpha = 1;
             self.loadmoreActivity.layer.transform = CATransform3DMakeScale(1, 1, 1);
             }, completion: {
                 (b) -> Void in
-                
-                
         })
     }
     
@@ -284,19 +312,7 @@ class ZJRefreshControl: UIControl {
         
     }
     
-    //距离scrollView底部的距离
-    private func scrollViewSpaceToButtom(scrollView: UIScrollView)->CGFloat{
-        var offset = scrollView.contentOffset;
-        var bounds = scrollView.bounds;
-        var size = scrollView.contentSize;
-        var inset = scrollView.contentInset;
-        var currentOffset = offset.y + bounds.size.height - inset.bottom;
-        var maximumOffset = size.height;
-        
-        //当currentOffset与maximumOffset的值相等时，说明scrollview已经滑到底部了。也可以根据这两个值的差来让他做点其他的什么事情
-        var space = maximumOffset-currentOffset;
-        return space;
-    }
+
     
     override var enabled: Bool  {
         get {
@@ -333,6 +349,25 @@ class ZJRefreshControl: UIControl {
         return (self.refreshing || self.loadingmore);
     }
     
+    //距离scrollView底部的距离
+    private func scrollViewSpaceToButtom(scrollView: UIScrollView)->CGFloat{
+        var offset = scrollView.contentOffset;
+        var bounds = scrollView.bounds;
+        var size = scrollView.contentSize;
+        var inset = scrollView.contentInset;
+        var currentOffset = offset.y + bounds.size.height - inset.bottom;
+        var maximumOffset = size.height;
+        var space:CGFloat = 0;
+        //当currentOffset与maximumOffset的值相等时，说明scrollview已经滑到底部了。也可以根据这两个值的差来让他做点其他的什么事情
+        //contentSize>bounds时
+        if(bounds.height < size.height){
+            space = maximumOffset - currentOffset;
+        }else{
+            space = -offset.y;
+        }
+        return space;
+    }
+    
     //事件
     override func observeValueForKeyPath(keyPath: String, ofObject: AnyObject, change: [NSObject : AnyObject], context: UnsafeMutablePointer<Void>) -> Void{
         
@@ -340,6 +375,7 @@ class ZJRefreshControl: UIControl {
             if (!ignoreInset) {
                 self.originalContentInset = change["new"]!.UIEdgeInsetsValue();
                 self.frame.origin.y = (-totalViewHeight + self.scrollView.contentInset.top);
+                
             }
             return;
         }
@@ -348,19 +384,48 @@ class ZJRefreshControl: UIControl {
             return;
         }
         
-        //加载更多
+        //--------------------------加载更多--------------------------------------------
         if(self.loadmore && (!self.isAnimating())){
-            var space = scrollViewSpaceToButtom(scrollView);
-            if(space < -80){
-                self.loadingmore = true;
-                loadmoreBlock();
-                loadmoreShow();
+            
+            var contentSizeHeight = self.scrollView.contentSize.height;
+            var frameHeight = self.scrollView.frame.height;
+            var space = self.scrollViewSpaceToButtom(scrollView);
+            
+            var isCanLoadMore = false;
+
+            if(tempBottomSpace < 0 && space < -loadMoreSpace && tempAdd > 3){
+                isCanLoadMore = true;
             }
+            if(space < tempBottomSpace){
+                tempAdd += 1;
+                tempBottomSpace = space;
+            }else{
+                tempAdd = 0;
+                tempBottomSpace = 0;
+            }
+            
+            if(isCanLoadMore){
+                
+                self.loadingmore = true;
+                tempBottomSpace = 0;
+                tempAdd = 0;
+                loadmoreShow();
+                loadmoreBlock();
+            }
+            
+            
         }
+        //--------------------------加载更多结束------------------------------------------
         
         var offset = change["new"]!.CGPointValue().y + self.originalContentInset.top;
+        if(offset == 0){
+            self.hideRefreshView();
+        }else{
+            self.showRefreshView();
+        }
         if (refreshing) {
             if (offset != 0) {
+                
                 CATransaction.begin();
                 CATransaction.setValue(kCFBooleanTrue, forKey: kCATransactionDisableActions)
                 
@@ -474,9 +539,7 @@ class ZJRefreshControl: UIControl {
             return;
         }
         if (!triggered) {
-            
             // 拉伸动画
-            
             refreshShapeLayer.path = path;
             refreshShapeLayer.shadowPath = path;
             
@@ -511,6 +574,7 @@ class ZJRefreshControl: UIControl {
                 refreshActivityShow();
                 
                 self.refreshing = true;
+                
                 self.canRefresh = false;
                 
                 self.refreshBlock();
