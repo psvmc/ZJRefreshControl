@@ -101,9 +101,7 @@ class ZJRefreshControl: UIControl {
         
         self.addSubview(refreshActivity);
         self.sendSubviewToBack(refreshActivity);
-        
         shapeTintColor = UIColor(red: 155.0 / 255.0, green: 162.0 / 255.0, blue: 172.0 / 255.0, alpha: 1.0)
-        
         layerAdd();
         
         //添加观察者
@@ -417,6 +415,8 @@ class ZJRefreshControl: UIControl {
         }
         //--------------------------加载更多结束------------------------------------------
         
+        //修正autolayout中scrollview宽度的不准确
+        self.frame = CGRectMake(0, self.frame.origin.y, scrollView.frame.size.width, totalViewHeight);
         var offset = change["new"]!.CGPointValue().y + self.originalContentInset.top;
         if(offset == 0){
             self.hideRefreshView();
