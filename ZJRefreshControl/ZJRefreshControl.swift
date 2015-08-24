@@ -33,7 +33,6 @@ class ZJRefreshControl: UIControl {
     private  var refreshShapeLayer:CAShapeLayer!;
     private  var refreshArrowLayer:CAShapeLayer!;
     private  var refreshHighlightLayer:CAShapeLayer!;
-    private  var canRefresh:Bool = true;
     private  var ignoreInset:Bool = false;
     private  var ignoreOffset:Bool = false;
     private  var didSetInset:Bool = false;
@@ -91,7 +90,7 @@ class ZJRefreshControl: UIControl {
         self.loadmoreBlock = loadmoreBlock;
         var frame = CGRectMake(0, (-totalViewHeight + scrollView.contentInset.top), scrollView.frame.size.width, totalViewHeight);
         super.init(frame:frame);
-        self.backgroundColor = UIColor.whiteColor();
+        self.backgroundColor = UIColor.clearColor();
         self.scrollView = scrollView;
         self.originalContentInset = scrollView.contentInset;
         
@@ -113,6 +112,15 @@ class ZJRefreshControl: UIControl {
         self.scrollViewContentInsetTop = self.scrollView.contentInset.top;
         hideRefreshView();
     }
+    
+    private func isCanRefresh() -> Bool{
+        if(self.refreshing || self.loadingmore){
+            return false;
+        }else{
+            return true;
+        }
+    }
+    
     
     private func hideRefreshView(){
         refreshShapeLayer.hidden = true;
@@ -275,6 +283,7 @@ class ZJRefreshControl: UIControl {
     private func refreshActivityShow()->Void{
         self.refreshActivity.center = CGPointMake(floor(self.frame.size.width / 2), 0);
         self.refreshActivity.alpha = 0.0;
+        self.refreshActivity.backgroundColor = UIColor.clearColor();
         CATransaction.begin();
         CATransaction.setValue(kCFBooleanTrue, forKey: kCATransactionDisableActions);
         self.refreshActivity.layer.transform = CATransform3DMakeScale(0.1, 0.1, 1);
@@ -310,7 +319,7 @@ class ZJRefreshControl: UIControl {
         
     }
     
-
+    
     
     override var enabled: Bool  {
         get {
@@ -390,7 +399,7 @@ class ZJRefreshControl: UIControl {
             var space = self.scrollViewSpaceToButtom(scrollView);
             
             var isCanLoadMore = false;
-
+            
             if(tempBottomSpace < 0 && space < -loadMoreSpace && tempAdd > 3){
                 isCanLoadMore = true;
             }
@@ -417,6 +426,8 @@ class ZJRefreshControl: UIControl {
         
         //修正autolayout中scrollview宽度的不准确
         self.frame = CGRectMake(0, self.frame.origin.y, scrollView.frame.size.width, totalViewHeight);
+        
+        
         var offset = change["new"]!.CGPointValue().y + self.originalContentInset.top;
         if(offset == 0){
             self.hideRefreshView();
@@ -426,46 +437,15 @@ class ZJRefreshControl: UIControl {
         if (refreshing) {
             if (offset != 0) {
                 
-                CATransaction.begin();
-                CATransaction.setValue(kCFBooleanTrue, forKey: kCATransactionDisableActions)
-                
-                self.refreshShapeLayer.position = CGPointMake(0, maxDistance + offset + showViewHeight);
-                
-                CATransaction.commit();
-                
                 ignoreInset = true;
                 ignoreOffset = true;
                 
                 if (offset < 0) {
                     if (offset >= -showViewHeight) {
                         //如果在刷新时上拉，调整scrollview的扩展显示区域
+                        
                         self.scrollView.contentInset = UIEdgeInsetsMake(self.originalContentInset.top - offset, self.originalContentInset.left, self.originalContentInset.bottom, self.originalContentInset.right);
                         self.refreshActivity.center = CGPointMake(floor(self.frame.size.width / 2), totalViewHeight-showViewHeight+showViewHeight/2);
-                        if (!self.scrollView.dragging) {
-                            if (!didSetInset) {
-                                didSetInset = true;
-                                hasSectionHeaders = false;
-                                
-                                if(self.scrollView.isKindOfClass(UITableView)){
-                                    
-                                    for (var i = 0; i < (self.scrollView as! UITableView).numberOfSections(); ++i) {
-                                        
-                                        if ((self.scrollView as! UITableView).rectForHeaderInSection(i).size.height > 0) {
-                                            hasSectionHeaders = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                            if (hasSectionHeaders) {
-                                self.scrollView.contentInset = UIEdgeInsetsMake(min(-offset, showViewHeight)+self.originalContentInset.top, self.originalContentInset.left, self.originalContentInset.bottom, self.originalContentInset.right);
-                                
-                            } else {
-                                self.scrollView.contentInset = UIEdgeInsetsMake(showViewHeight+self.originalContentInset.top, self.originalContentInset.left, self.originalContentInset.bottom, self.originalContentInset.right);
-                            }
-                        } else if (didSetInset && hasSectionHeaders) {
-                            self.scrollView.contentInset = UIEdgeInsetsMake(-offset+self.originalContentInset.top, self.originalContentInset.left, self.originalContentInset.bottom, self.originalContentInset.right);
-                        }
                     }
                 } else if (hasSectionHeaders) {
                     self.scrollView.contentInset = self.originalContentInset;
@@ -475,9 +455,9 @@ class ZJRefreshControl: UIControl {
             }
             return;
         } else {
-            if (!canRefresh) {
+            if (!self.isCanRefresh()) {
                 if (offset >= 0) {
-                    canRefresh = true;
+                    
                     didSetInset = false;
                 } else {
                     return;
@@ -535,7 +515,6 @@ class ZJRefreshControl: UIControl {
         CGPathAddCurveToPoint(path, nil, rightCp1.x, rightCp1.y, rightCp2.x, rightCp2.y, rightDestination.x, rightDestination.y);
         CGPathCloseSubpath(path);
         if(isAnimating()){
-            
             return;
         }
         if (!triggered) {
@@ -574,8 +553,6 @@ class ZJRefreshControl: UIControl {
                 refreshActivityShow();
                 
                 self.refreshing = true;
-                
-                self.canRefresh = false;
                 
                 self.refreshBlock();
             }
