@@ -1,0 +1,19 @@
+# Xcode
+
+*.xccheckout
+.DS_Store
+xcuserdata
+UserInterfaceState.xcuserstate
+contents.xcworkspacedata
+build/
+
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+
+# CocoaPods
+Pods
+.idea/
+*.xcbkptlist
+Podfile.lock
