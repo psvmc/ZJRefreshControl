@@ -9,6 +9,7 @@
 import UIKit
 
 class ZJRefreshControl: UIControl {
+    var logger = XCGLogger.defaultInstance();
     
     //一些常量
     private let totalViewHeight:CGFloat  =   400;
@@ -59,11 +60,10 @@ class ZJRefreshControl: UIControl {
     //刷新方法
     var refreshBlock:()->() = {};
     
-    
     //加载更多相关
     private var loadmoreBlock:()->() = {};
     
-    //是否加载更多
+    //是否有加载更多功能
     private var loadmore = false;
     //是否正在加载更多
     private var loadingmore = false;
@@ -71,7 +71,7 @@ class ZJRefreshControl: UIControl {
     
     
     
-    required init(coder aDecoder: NSCoder) {
+    required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder);
         fatalError("init(coder:) has not been implemented")
     }
@@ -88,7 +88,7 @@ class ZJRefreshControl: UIControl {
     init(scrollView:UIScrollView, activityIndicatorView activity:UIView?,refreshBlock:()->(),loadmoreBlock:()->()){
         self.loadmore = true;
         self.loadmoreBlock = loadmoreBlock;
-        var frame = CGRectMake(0, (-totalViewHeight + scrollView.contentInset.top), scrollView.frame.size.width, totalViewHeight);
+        let frame = CGRectMake(0, (-totalViewHeight + scrollView.contentInset.top), scrollView.frame.size.width, totalViewHeight);
         super.init(frame:frame);
         self.backgroundColor = UIColor.clearColor();
         self.scrollView = scrollView;
@@ -96,7 +96,10 @@ class ZJRefreshControl: UIControl {
         
         //旋转图标
         self.refreshActivity = UIActivityIndicatorView(activityIndicatorStyle: self.activityIndicatorViewStyle);
-        
+        self.refreshActivity.frame = CGRectMake(0, 0, 36, 36);
+        self.refreshActivity.backgroundColor = UIColor(red: 1, green: 1, blue: 1, alpha: 1);
+        self.refreshActivity.layer.cornerRadius = 18;
+        self.refreshActivity.layer.masksToBounds = true;
         
         self.addSubview(refreshActivity);
         self.sendSubviewToBack(refreshActivity);
@@ -108,9 +111,19 @@ class ZJRefreshControl: UIControl {
         scrollView.addObserver(self, forKeyPath: "contentInset", options: NSKeyValueObservingOptions.New, context: nil);
         self.refreshBlock = refreshBlock;
         scrollView.addSubview(self);
+        scrollView.sendSubviewToBack(self);
         loadmoreViewAdd();
         self.scrollViewContentInsetTop = self.scrollView.contentInset.top;
         hideRefreshView();
+    }
+    
+    private func delay(delay:Double, closure:()->()) {
+        dispatch_after(
+            dispatch_time(
+                DISPATCH_TIME_NOW,
+                Int64(delay * Double(NSEC_PER_SEC))
+            ),
+            dispatch_get_main_queue(), closure)
     }
     
     private func isCanRefresh() -> Bool{
@@ -135,16 +148,15 @@ class ZJRefreshControl: UIControl {
     }
     
     
-    //刷新结束 记得调用该方法
+    ///刷新结束 记得调用该方法
     internal func endRefreshing() -> Void{
         if (self.refreshing) {
             self.refreshing = false;
-            var blockScrollView = self.scrollView;
-            
+            let blockScrollView = self.scrollView;
+
             UIView.animateWithDuration(0.15, animations: {
                 self.ignoreInset = true;
                 blockScrollView.contentInset = self.originalContentInset;
-                
                 }, completion: {
                     (b) -> Void in
                     blockScrollView.contentInset = self.originalContentInset;
@@ -154,8 +166,6 @@ class ZJRefreshControl: UIControl {
                     self.layerAdd();
                     self.hideRefreshView();
             })
-            
-            
         }
     }
     
@@ -168,28 +178,35 @@ class ZJRefreshControl: UIControl {
     //加载更多视图的添加
     private func loadmoreViewAdd() -> Void{
         self.loadmoreActivity = UIActivityIndicatorView(activityIndicatorStyle: self.activityIndicatorViewStyle);
-        self.loadmoreActivity.frame =  CGRectMake(0, self.scrollView.frame.size.height + 20, self.scrollView.bounds.width, totalViewHeight);
+        self.loadmoreActivity.frame =  CGRectMake(0, self.scrollView.frame.size.height + 20, 36, 36);
         self.loadmoreActivity.alpha = 0;
+        self.loadmoreActivity.backgroundColor = UIColor(red: 1, green: 1, blue: 1, alpha: 1);
+        self.loadmoreActivity.layer.cornerRadius = 18;
+        self.loadmoreActivity.layer.masksToBounds = true;
         self.loadmoreActivity.layer.transform = CATransform3DMakeScale(0, 0, 1);
         self.scrollView.addSubview(self.loadmoreActivity);
+        self.scrollView.sendSubviewToBack(self.loadmoreActivity);
         //给加载更多View留位置
         scrollView.contentInset.bottom += 40;
     }
     
+    
+    
     //加载更多显示
     private func loadmoreShow() -> Void{
         self.loadingmore  =  true;
-        var contentSizeHeight = self.scrollView.contentSize.height;
-        
+        let contentSizeHeight = self.scrollView.contentSize.height;
         self.loadmoreActivity.center = CGPointMake(self.scrollView.frame.width/2, contentSizeHeight + 20);
         self.loadmoreActivity.startAnimating();
         
         UIView.animateWithDuration(0.5, animations: {
-            
             self.loadmoreActivity.alpha = 1;
             self.loadmoreActivity.layer.transform = CATransform3DMakeScale(1, 1, 1);
             }, completion: {
                 (b) -> Void in
+                self.delay(0.5, closure: {
+                    self.loadmoreBlock();
+                })
         })
     }
     
@@ -238,9 +255,9 @@ class ZJRefreshControl: UIControl {
     
     //气泡隐藏
     private func layerHide() -> Void{
-        var pathMorph = CABasicAnimation(keyPath: "path");
-        var toPath = CGPathCreateMutable();
-        var radius = lerp(minBottomRadius, b: maxBottomRadius, p: 0.2);
+        let pathMorph = CABasicAnimation(keyPath: "path");
+        let toPath = CGPathCreateMutable();
+        let radius = lerp(minBottomRadius, b: maxBottomRadius, p: 0.2);
         CGPathAddArc(toPath, nil, topOrigin.x, topOrigin.y, radius, 0, CGFloat(M_PI), true);
         CGPathAddCurveToPoint(toPath, nil, topOrigin.x - radius, topOrigin.y, topOrigin.x - radius, topOrigin.y, topOrigin.x - radius, topOrigin.y);
         CGPathAddArc(toPath, nil, topOrigin.x, topOrigin.y, radius, CGFloat(M_PI), 0, true);
@@ -252,14 +269,14 @@ class ZJRefreshControl: UIControl {
         pathMorph.removedOnCompletion = false;
         refreshShapeLayer.addAnimation(pathMorph, forKey: nil);
         
-        var shadowPathMorph = CABasicAnimation(keyPath: "shadowPath");
+        let shadowPathMorph = CABasicAnimation(keyPath: "shadowPath");
         shadowPathMorph.duration = 0.2;
         shadowPathMorph.fillMode = kCAFillModeForwards;
         shadowPathMorph.removedOnCompletion = false;
         shadowPathMorph.toValue = toPath;
         refreshShapeLayer.addAnimation(shadowPathMorph, forKey: nil);
         
-        var alphaAnimation = CABasicAnimation(keyPath: "opacity");
+        let alphaAnimation = CABasicAnimation(keyPath: "opacity");
         alphaAnimation.duration = 0.3;
         alphaAnimation.toValue = NSNumber(float: 0);
         alphaAnimation.fillMode = kCAFillModeForwards;
@@ -281,23 +298,29 @@ class ZJRefreshControl: UIControl {
     
     //刷新旋转出现
     private func refreshActivityShow()->Void{
+        
         self.refreshActivity.center = CGPointMake(floor(self.frame.size.width / 2), 0);
         self.refreshActivity.alpha = 0.0;
-        self.refreshActivity.backgroundColor = UIColor.clearColor();
+        
         CATransaction.begin();
         CATransaction.setValue(kCFBooleanTrue, forKey: kCATransactionDisableActions);
-        self.refreshActivity.layer.transform = CATransform3DMakeScale(0.1, 0.1, 1);
+        self.refreshActivity.layer.transform = CATransform3DMakeScale(0.5, 0.5, 1);
         self.refreshActivity.startAnimating();
         CATransaction.commit();
         
-        UIView.animateWithDuration(0.2, delay: 0.25,
+        UIView.animateWithDuration(0.2, delay: 0,
             options: UIViewAnimationOptions.CurveLinear,
             animations: {
-                
                 self.refreshActivity.alpha = 1;
                 self.refreshActivity.layer.transform = CATransform3DMakeScale(1, 1, 1);
             },
-            completion: nil);
+            completion: {
+                (b)->Void in
+                self.delay(0.5, closure: {
+                    self.refreshBlock();
+                })
+                
+        });
     }
     
     //刷新旋转消失
@@ -312,11 +335,9 @@ class ZJRefreshControl: UIControl {
             completion: {
                 (b)->Void in
                 //刷新后滚动到最上面
-                var rect = CGRectMake(0, 0, self.scrollView.bounds.width, 10);
+                let rect = CGRectMake(0, 0, self.scrollView.bounds.width, 10);
                 self.scrollView.scrollRectToVisible(rect, animated: true);
         });
-        
-        
     }
     
     
@@ -358,12 +379,12 @@ class ZJRefreshControl: UIControl {
     
     //距离scrollView底部的距离
     private func scrollViewSpaceToButtom(scrollView: UIScrollView)->CGFloat{
-        var offset = scrollView.contentOffset;
-        var bounds = scrollView.bounds;
-        var size = scrollView.contentSize;
-        var inset = scrollView.contentInset;
-        var currentOffset = offset.y + bounds.size.height - inset.bottom;
-        var maximumOffset = size.height;
+        let offset = scrollView.contentOffset;
+        let bounds = scrollView.bounds;
+        let size = scrollView.contentSize;
+        let inset = scrollView.contentInset;
+        let currentOffset = offset.y + bounds.size.height - inset.bottom;
+        let maximumOffset = size.height;
         var space:CGFloat = 0;
         //当currentOffset与maximumOffset的值相等时，说明scrollview已经滑到底部了。也可以根据这两个值的差来让他做点其他的什么事情
         //contentSize>bounds时
@@ -376,13 +397,12 @@ class ZJRefreshControl: UIControl {
     }
     
     //事件
-    override func observeValueForKeyPath(keyPath: String, ofObject: AnyObject, change: [NSObject : AnyObject], context: UnsafeMutablePointer<Void>) -> Void{
+    override func observeValueForKeyPath(keyPath: String?, ofObject: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) -> Void{
         
         if ( keyPath == "contentInset" ) {
             if (!ignoreInset) {
-                self.originalContentInset = change["new"]!.UIEdgeInsetsValue();
+                self.originalContentInset = change!["new"]!.UIEdgeInsetsValue();
                 self.frame.origin.y = (-totalViewHeight + self.scrollView.contentInset.top);
-                
             }
             return;
         }
@@ -393,16 +413,12 @@ class ZJRefreshControl: UIControl {
         
         //--------------------------加载更多--------------------------------------------
         if(self.loadmore && (!self.isAnimating())){
-            
-            var contentSizeHeight = self.scrollView.contentSize.height;
-            var frameHeight = self.scrollView.frame.height;
-            var space = self.scrollViewSpaceToButtom(scrollView);
-            
+            let space = self.scrollViewSpaceToButtom(scrollView);
             var isCanLoadMore = false;
-            
             if(tempBottomSpace < 0 && space < -loadMoreSpace && tempAdd > 3){
                 isCanLoadMore = true;
             }
+            
             if(space < tempBottomSpace){
                 tempAdd += 1;
                 tempBottomSpace = space;
@@ -412,23 +428,18 @@ class ZJRefreshControl: UIControl {
             }
             
             if(isCanLoadMore){
-                
                 self.loadingmore = true;
                 tempBottomSpace = 0;
                 tempAdd = 0;
                 loadmoreShow();
-                loadmoreBlock();
             }
-            
-            
         }
         //--------------------------加载更多结束------------------------------------------
         
         //修正autolayout中scrollview宽度的不准确
         self.frame = CGRectMake(0, self.frame.origin.y, scrollView.frame.size.width, totalViewHeight);
         
-        
-        var offset = change["new"]!.CGPointValue().y + self.originalContentInset.top;
+        let offset = change!["new"]!.CGPointValue.y + self.originalContentInset.top;
         if(offset == 0){
             self.hideRefreshView();
         }else{
@@ -436,14 +447,11 @@ class ZJRefreshControl: UIControl {
         }
         if (refreshing) {
             if (offset != 0) {
-                
                 ignoreInset = true;
                 ignoreOffset = true;
-                
                 if (offset < 0) {
                     if (offset >= -showViewHeight) {
                         //如果在刷新时上拉，调整scrollview的扩展显示区域
-                        
                         self.scrollView.contentInset = UIEdgeInsetsMake(self.originalContentInset.top - offset, self.originalContentInset.left, self.originalContentInset.bottom, self.originalContentInset.right);
                         self.refreshActivity.center = CGPointMake(floor(self.frame.size.width / 2), totalViewHeight-showViewHeight+showViewHeight/2);
                     }
@@ -471,16 +479,16 @@ class ZJRefreshControl: UIControl {
         
         var triggered = false;
         
-        var path = CGPathCreateMutable();
+        let path = CGPathCreateMutable();
         
-        var verticalShift = max(0, -((maxTopRadius + maxBottomRadius + maxTopPadding + maxBottomPadding) + offset));
-        var distance = min(maxDistance, fabs(verticalShift));
-        var percentage = 1 - (distance / maxDistance);
+        let verticalShift = max(0, -((maxTopRadius + maxBottomRadius + maxTopPadding + maxBottomPadding) + offset));
+        let distance = min(maxDistance, fabs(verticalShift));
+        let percentage = 1 - (distance / maxDistance);
         
-        var currentTopPadding = self.lerp(minTopPadding, b: maxTopPadding, p: percentage);
-        var currentTopRadius = lerp(minTopRadius, b: maxTopRadius, p: percentage);
-        var currentBottomRadius = lerp(minBottomRadius, b: maxBottomRadius, p: percentage);
-        var currentBottomPadding =  lerp(minBottomPadding, b: maxBottomPadding, p: percentage);
+        let currentTopPadding = self.lerp(minTopPadding, b: maxTopPadding, p: percentage);
+        let currentTopRadius = lerp(minTopRadius, b: maxTopRadius, p: percentage);
+        let currentBottomRadius = lerp(minBottomRadius, b: maxBottomRadius, p: percentage);
+        let currentBottomPadding =  lerp(minBottomPadding, b: maxBottomPadding, p: percentage);
         
         var bottomOrigin = CGPointMake(floor(self.bounds.size.width / 2), self.bounds.size.height - currentBottomPadding - currentBottomRadius);
         
@@ -498,19 +506,17 @@ class ZJRefreshControl: UIControl {
         CGPathAddArc(path, nil, topOrigin.x, topOrigin.y, currentTopRadius, 0, CGFloat(M_PI), true);
         
         
-        var leftCp1 = CGPointMake(lerp((topOrigin.x - currentTopRadius), b: (bottomOrigin.x - currentBottomRadius), p: 0.1), lerp(topOrigin.y, b: bottomOrigin.y, p: 0.2));
-        var leftCp2 = CGPointMake(lerp((topOrigin.x - currentTopRadius), b: (bottomOrigin.x - currentBottomRadius), p: 0.9), lerp(topOrigin.y, b: bottomOrigin.y, p: 0.2));
-        var leftDestination = CGPointMake(bottomOrigin.x - currentBottomRadius, bottomOrigin.y);
+        let leftCp1 = CGPointMake(lerp((topOrigin.x - currentTopRadius), b: (bottomOrigin.x - currentBottomRadius), p: 0.1), lerp(topOrigin.y, b: bottomOrigin.y, p: 0.2));
+        let leftCp2 = CGPointMake(lerp((topOrigin.x - currentTopRadius), b: (bottomOrigin.x - currentBottomRadius), p: 0.9), lerp(topOrigin.y, b: bottomOrigin.y, p: 0.2));
+        let leftDestination = CGPointMake(bottomOrigin.x - currentBottomRadius, bottomOrigin.y);
         
         CGPathAddCurveToPoint(path, nil, leftCp1.x, leftCp1.y, leftCp2.x, leftCp2.y, leftDestination.x, leftDestination.y);
-        
-        
         CGPathAddArc(path, nil, bottomOrigin.x, bottomOrigin.y, currentBottomRadius, CGFloat(M_PI), 0, true);
         
         
-        var rightCp2 = CGPointMake(lerp((topOrigin.x + currentTopRadius), b: (bottomOrigin.x + currentBottomRadius), p: 0.1), lerp(topOrigin.y, b: bottomOrigin.y, p: 0.2));
-        var rightCp1 = CGPointMake(lerp((topOrigin.x + currentTopRadius), b: (bottomOrigin.x + currentBottomRadius), p: 0.9), lerp(topOrigin.y, b: bottomOrigin.y, p: 0.2));
-        var rightDestination = CGPointMake(topOrigin.x + currentTopRadius, topOrigin.y);
+        let rightCp2 = CGPointMake(lerp((topOrigin.x + currentTopRadius), b: (bottomOrigin.x + currentBottomRadius), p: 0.1), lerp(topOrigin.y, b: bottomOrigin.y, p: 0.2));
+        let rightCp1 = CGPointMake(lerp((topOrigin.x + currentTopRadius), b: (bottomOrigin.x + currentBottomRadius), p: 0.9), lerp(topOrigin.y, b: bottomOrigin.y, p: 0.2));
+        let rightDestination = CGPointMake(topOrigin.x + currentTopRadius, topOrigin.y);
         
         CGPathAddCurveToPoint(path, nil, rightCp1.x, rightCp1.y, rightCp2.x, rightCp2.y, rightDestination.x, rightDestination.y);
         CGPathCloseSubpath(path);
@@ -522,11 +528,11 @@ class ZJRefreshControl: UIControl {
             refreshShapeLayer.path = path;
             refreshShapeLayer.shadowPath = path;
             
-            var currentArrowSize = lerp(minArrowSize, b: maxArrowSize, p: percentage);
-            var currentArrowRadius = lerp(minArrowRadius, b: maxArrowRadius, p: percentage);
-            var arrowBigRadius = currentArrowRadius + (currentArrowSize / 2);
-            var arrowSmallRadius = currentArrowRadius - (currentArrowSize / 2);
-            var arrowPath = CGPathCreateMutable();
+            let currentArrowSize = lerp(minArrowSize, b: maxArrowSize, p: percentage);
+            let currentArrowRadius = lerp(minArrowRadius, b: maxArrowRadius, p: percentage);
+            let arrowBigRadius = currentArrowRadius + (currentArrowSize / 2);
+            let arrowSmallRadius = currentArrowRadius - (currentArrowSize / 2);
+            let arrowPath = CGPathCreateMutable();
             CGPathAddArc(arrowPath, nil, topOrigin.x, topOrigin.y, arrowBigRadius, 0, CGFloat(3 * M_PI_2), false);
             CGPathAddLineToPoint(arrowPath, nil, topOrigin.x, topOrigin.y - arrowBigRadius - currentArrowSize);
             CGPathAddLineToPoint(arrowPath, nil, topOrigin.x + (2 * currentArrowSize), topOrigin.y - arrowBigRadius + (currentArrowSize / 2));
@@ -537,28 +543,20 @@ class ZJRefreshControl: UIControl {
             refreshArrowLayer.path = arrowPath;
             refreshArrowLayer.fillRule = kCAFillRuleEvenOdd;
             
-            var highlightPath = CGPathCreateMutable();
+            let highlightPath = CGPathCreateMutable();
             CGPathAddArc(highlightPath, nil, topOrigin.x, topOrigin.y, currentTopRadius, 0, CGFloat(M_PI), true);
             CGPathAddArc(highlightPath, nil, topOrigin.x, topOrigin.y + 1.25, currentTopRadius, CGFloat(M_PI), 0, false);
             
             refreshHighlightLayer.path = highlightPath;
             refreshHighlightLayer.fillRule = kCAFillRuleNonZero;
-            
-            
         } else {
             //如果没刷新，就进行刷新
             if(!isAnimating()){
-                
                 layerHide();
                 refreshActivityShow();
-                
                 self.refreshing = true;
-                
-                self.refreshBlock();
             }
         }
-        
     }
-    
     
 }
