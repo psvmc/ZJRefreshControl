@@ -17,3 +17,5 @@ Pods
 .idea/
 *.xcbkptlist
 Podfile.lock
+
+.DS_Store
