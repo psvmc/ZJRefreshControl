@@ -5,11 +5,8 @@
 //  Created by PSVMC on 15/7/4.
 //
 //
-
 import UIKit
-
 class ZJRefreshControl: UIControl {
-    var logger = XCGLogger.defaultInstance();
     
     //一些常量
     private let totalViewHeight:CGFloat  =   400;
@@ -60,10 +57,11 @@ class ZJRefreshControl: UIControl {
     //刷新方法
     var refreshBlock:()->() = {};
     
+    
     //加载更多相关
     private var loadmoreBlock:()->() = {};
     
-    //是否有加载更多功能
+    //是否加载更多
     private var loadmore = false;
     //是否正在加载更多
     private var loadingmore = false;
@@ -96,10 +94,7 @@ class ZJRefreshControl: UIControl {
         
         //旋转图标
         self.refreshActivity = UIActivityIndicatorView(activityIndicatorStyle: self.activityIndicatorViewStyle);
-        self.refreshActivity.frame = CGRectMake(0, 0, 36, 36);
-        self.refreshActivity.backgroundColor = UIColor(red: 1, green: 1, blue: 1, alpha: 1);
-        self.refreshActivity.layer.cornerRadius = 18;
-        self.refreshActivity.layer.masksToBounds = true;
+        
         
         self.addSubview(refreshActivity);
         self.sendSubviewToBack(refreshActivity);
@@ -115,15 +110,6 @@ class ZJRefreshControl: UIControl {
         loadmoreViewAdd();
         self.scrollViewContentInsetTop = self.scrollView.contentInset.top;
         hideRefreshView();
-    }
-    
-    private func delay(delay:Double, closure:()->()) {
-        dispatch_after(
-            dispatch_time(
-                DISPATCH_TIME_NOW,
-                Int64(delay * Double(NSEC_PER_SEC))
-            ),
-            dispatch_get_main_queue(), closure)
     }
     
     private func isCanRefresh() -> Bool{
@@ -148,15 +134,16 @@ class ZJRefreshControl: UIControl {
     }
     
     
-    ///刷新结束 记得调用该方法
+    //刷新结束 记得调用该方法
     internal func endRefreshing() -> Void{
         if (self.refreshing) {
             self.refreshing = false;
             let blockScrollView = self.scrollView;
-
+            
             UIView.animateWithDuration(0.15, animations: {
                 self.ignoreInset = true;
                 blockScrollView.contentInset = self.originalContentInset;
+                
                 }, completion: {
                     (b) -> Void in
                     blockScrollView.contentInset = self.originalContentInset;
@@ -166,6 +153,8 @@ class ZJRefreshControl: UIControl {
                     self.layerAdd();
                     self.hideRefreshView();
             })
+            
+            
         }
     }
     
@@ -173,6 +162,15 @@ class ZJRefreshControl: UIControl {
     internal func endLoadingmore() -> Void{
         self.loadingmore = false;
         self.loadmoreHide();
+    }
+    
+    private func delay(delay:Double, closure:()->()) {
+        dispatch_after(
+            dispatch_time(
+                DISPATCH_TIME_NOW,
+                Int64(delay * Double(NSEC_PER_SEC))
+            ),
+            dispatch_get_main_queue(), closure)
     }
     
     //加载更多视图的添加
@@ -190,12 +188,11 @@ class ZJRefreshControl: UIControl {
         scrollView.contentInset.bottom += 40;
     }
     
-    
-    
     //加载更多显示
     private func loadmoreShow() -> Void{
         self.loadingmore  =  true;
         let contentSizeHeight = self.scrollView.contentSize.height;
+        
         self.loadmoreActivity.center = CGPointMake(self.scrollView.frame.width/2, contentSizeHeight + 20);
         self.loadmoreActivity.startAnimating();
         
@@ -247,7 +244,6 @@ class ZJRefreshControl: UIControl {
         refreshArrowLayer.strokeColor = UIColor.darkGrayColor().colorWithAlphaComponent(0.5).CGColor;
         refreshArrowLayer.lineWidth = 0.5;
         refreshArrowLayer.fillColor = UIColor.whiteColor().CGColor;
-        
         refreshHighlightLayer.fillColor = UIColor.whiteColor().colorWithAlphaComponent(0.2).CGColor;
         
         self.layer.addSublayer(refreshShapeLayer);
@@ -298,17 +294,16 @@ class ZJRefreshControl: UIControl {
     
     //刷新旋转出现
     private func refreshActivityShow()->Void{
-        
         self.refreshActivity.center = CGPointMake(floor(self.frame.size.width / 2), 0);
         self.refreshActivity.alpha = 0.0;
-        
+        self.refreshActivity.backgroundColor = UIColor.clearColor();
         CATransaction.begin();
         CATransaction.setValue(kCFBooleanTrue, forKey: kCATransactionDisableActions);
-        self.refreshActivity.layer.transform = CATransform3DMakeScale(0.5, 0.5, 1);
+        self.refreshActivity.layer.transform = CATransform3DMakeScale(0.1, 0.1, 1);
         self.refreshActivity.startAnimating();
         CATransaction.commit();
         
-        UIView.animateWithDuration(0.2, delay: 0,
+        UIView.animateWithDuration(0.2, delay: 0.25,
             options: UIViewAnimationOptions.CurveLinear,
             animations: {
                 self.refreshActivity.alpha = 1;
@@ -338,6 +333,8 @@ class ZJRefreshControl: UIControl {
                 let rect = CGRectMake(0, 0, self.scrollView.bounds.width, 10);
                 self.scrollView.scrollRectToVisible(rect, animated: true);
         });
+        
+        
     }
     
     
@@ -403,6 +400,7 @@ class ZJRefreshControl: UIControl {
             if (!ignoreInset) {
                 self.originalContentInset = change!["new"]!.UIEdgeInsetsValue();
                 self.frame.origin.y = (-totalViewHeight + self.scrollView.contentInset.top);
+                
             }
             return;
         }
@@ -413,12 +411,14 @@ class ZJRefreshControl: UIControl {
         
         //--------------------------加载更多--------------------------------------------
         if(self.loadmore && (!self.isAnimating())){
+            
             let space = self.scrollViewSpaceToButtom(scrollView);
+            
             var isCanLoadMore = false;
+            
             if(tempBottomSpace < 0 && space < -loadMoreSpace && tempAdd > 3){
                 isCanLoadMore = true;
             }
-            
             if(space < tempBottomSpace){
                 tempAdd += 1;
                 tempBottomSpace = space;
@@ -428,16 +428,20 @@ class ZJRefreshControl: UIControl {
             }
             
             if(isCanLoadMore){
+                
                 self.loadingmore = true;
                 tempBottomSpace = 0;
                 tempAdd = 0;
                 loadmoreShow();
             }
+            
+            
         }
         //--------------------------加载更多结束------------------------------------------
         
         //修正autolayout中scrollview宽度的不准确
         self.frame = CGRectMake(0, self.frame.origin.y, scrollView.frame.size.width, totalViewHeight);
+        
         
         let offset = change!["new"]!.CGPointValue.y + self.originalContentInset.top;
         if(offset == 0){
@@ -447,11 +451,14 @@ class ZJRefreshControl: UIControl {
         }
         if (refreshing) {
             if (offset != 0) {
+                
                 ignoreInset = true;
                 ignoreOffset = true;
+                
                 if (offset < 0) {
                     if (offset >= -showViewHeight) {
                         //如果在刷新时上拉，调整scrollview的扩展显示区域
+                        
                         self.scrollView.contentInset = UIEdgeInsetsMake(self.originalContentInset.top - offset, self.originalContentInset.left, self.originalContentInset.bottom, self.originalContentInset.right);
                         self.refreshActivity.center = CGPointMake(floor(self.frame.size.width / 2), totalViewHeight-showViewHeight+showViewHeight/2);
                     }
@@ -511,6 +518,7 @@ class ZJRefreshControl: UIControl {
         let leftDestination = CGPointMake(bottomOrigin.x - currentBottomRadius, bottomOrigin.y);
         
         CGPathAddCurveToPoint(path, nil, leftCp1.x, leftCp1.y, leftCp2.x, leftCp2.y, leftDestination.x, leftDestination.y);
+        
         CGPathAddArc(path, nil, bottomOrigin.x, bottomOrigin.y, currentBottomRadius, CGFloat(M_PI), 0, true);
         
         
@@ -549,14 +557,19 @@ class ZJRefreshControl: UIControl {
             
             refreshHighlightLayer.path = highlightPath;
             refreshHighlightLayer.fillRule = kCAFillRuleNonZero;
+            
+            
         } else {
             //如果没刷新，就进行刷新
             if(!isAnimating()){
                 layerHide();
                 refreshActivityShow();
                 self.refreshing = true;
+                
             }
         }
+        
     }
+    
     
 }
