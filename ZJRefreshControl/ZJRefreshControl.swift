@@ -106,7 +106,6 @@ class ZJRefreshControl: UIControl {
         scrollView.addObserver(self, forKeyPath: "contentInset", options: NSKeyValueObservingOptions.New, context: nil);
         self.refreshBlock = refreshBlock;
         scrollView.addSubview(self);
-        scrollView.sendSubviewToBack(self);
         loadmoreViewAdd();
         self.scrollViewContentInsetTop = self.scrollView.contentInset.top;
         hideRefreshView();
