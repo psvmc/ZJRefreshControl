@@ -1,6 +1,5 @@
 //
 //  ZJRefreshControl.swift
-//  ecms_ios
 //
 //  Created by PSVMC on 15/7/4.
 //

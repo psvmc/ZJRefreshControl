@@ -3,7 +3,7 @@
 
 ####简介
 本组件效果参照了`ODRefreshControl`，用`swift`写成，添加了`上拉加载更多`  
-要使用本效果`swift`必须为`1.2`
+要使用本效果`swift`必须为`2.1`
 ####效果演示  
 ![效果演示](https://github.com/psvmc/ZJRefreshControl/raw/master/Images/refresh01.gif)
 ####调用方式
