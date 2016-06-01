@@ -32,7 +32,7 @@
 	
 	//下拉刷新调用的方法
 	func dropViewDidBeginRefreshing()->Void{
-        println("-----刷新数据-----");
+        print("-----刷新数据-----");
         self.delay(1.5, closure: {
         	//结束下拉刷新必须调用
           self.refreshControl.endRefreshing();
@@ -41,7 +41,7 @@
     
     //上拉加载更多调用的方法
     func dropViewDidBeginLoadmore()->Void{
-        println("-----加载数据-----");
+        print("-----加载数据-----");
         self.delay(1.5, closure: {
         	//结束加载更多必须调用
           self.refreshControl.endLoadingmore();
