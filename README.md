@@ -75,3 +75,9 @@
 + 上面的延迟调用只是模拟数据的请求中消耗的时间，使用时不用该方法
 + 上面示例中的参数中`msgTableView`可以是`UITableview`或者是任何`继承``UIScrollView`的对象实例
 
+
+刷新动画位置不对请用下面方法矫正 负数向上移动 正数向下移动
+
+```swift
+refreshControl.setTopOffset(-64);
+```

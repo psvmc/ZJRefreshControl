@@ -1,5 +1,6 @@
 //
 //  ZJRefreshControl.swift
+//  ecms_ios
 //
 //  Created by PSVMC on 15/7/4.
 //
@@ -42,9 +43,9 @@ class ZJRefreshControl: UIControl {
     private var tempAdd:CGFloat = 0;
     
     ///上拉多少距离开始加载更多
-    internal var loadMoreSpace:CGFloat = 70;
+    internal var loadMoreSpace:CGFloat = 60;
     
-    //旋转的样式
+    //下拉刷新旋转的样式
     internal var refreshActivity:UIActivityIndicatorView!;
     internal var activityIndicatorViewStyle:UIActivityIndicatorViewStyle = UIActivityIndicatorViewStyle.Gray;
     
@@ -55,8 +56,7 @@ class ZJRefreshControl: UIControl {
     
     //刷新方法
     var refreshBlock:()->() = {};
-    
-    
+
     //加载更多相关
     private var loadmoreBlock:()->() = {};
     
@@ -64,7 +64,11 @@ class ZJRefreshControl: UIControl {
     private var loadmore = false;
     //是否正在加载更多
     private var loadingmore = false;
+    //加载更多旋转的样式
     internal var loadmoreActivity:UIActivityIndicatorView!;
+    
+    //顶部偏移
+    private var topOffset:CGFloat = 0;
     
     
     
@@ -105,9 +109,15 @@ class ZJRefreshControl: UIControl {
         scrollView.addObserver(self, forKeyPath: "contentInset", options: NSKeyValueObservingOptions.New, context: nil);
         self.refreshBlock = refreshBlock;
         scrollView.addSubview(self);
+        //scrollView.sendSubviewToBack(self);
         loadmoreViewAdd();
         self.scrollViewContentInsetTop = self.scrollView.contentInset.top;
         hideRefreshView();
+    }
+    
+    //设置顶部偏移量
+    func setTopOffset(topOffset:CGFloat){
+        self.topOffset = topOffset;
     }
     
     private func isCanRefresh() -> Bool{
@@ -249,13 +259,14 @@ class ZJRefreshControl: UIControl {
     
     //气泡隐藏
     private func layerHide() -> Void{
+        var transform = CGAffineTransformMakeTranslation(0,topOffset);
         let pathMorph = CABasicAnimation(keyPath: "path");
         let toPath = CGPathCreateMutable();
         let radius = lerp(minBottomRadius, b: maxBottomRadius, p: 0.2);
-        CGPathAddArc(toPath, nil, topOrigin.x, topOrigin.y, radius, 0, CGFloat(M_PI), true);
-        CGPathAddCurveToPoint(toPath, nil, topOrigin.x - radius, topOrigin.y, topOrigin.x - radius, topOrigin.y, topOrigin.x - radius, topOrigin.y);
-        CGPathAddArc(toPath, nil, topOrigin.x, topOrigin.y, radius, CGFloat(M_PI), 0, true);
-        CGPathAddCurveToPoint(toPath, nil, topOrigin.x + radius, topOrigin.y, topOrigin.x + radius, topOrigin.y, topOrigin.x + radius, topOrigin.y);
+        CGPathAddArc(toPath, &transform, topOrigin.x, topOrigin.y, radius, 0, CGFloat(M_PI), true);
+        CGPathAddCurveToPoint(toPath, &transform, topOrigin.x - radius, topOrigin.y, topOrigin.x - radius, topOrigin.y, topOrigin.x - radius, topOrigin.y);
+        CGPathAddArc(toPath, &transform, topOrigin.x, topOrigin.y, radius, CGFloat(M_PI), 0, true);
+        CGPathAddCurveToPoint(toPath, &transform, topOrigin.x + radius, topOrigin.y, topOrigin.x + radius, topOrigin.y, topOrigin.x + radius, topOrigin.y);
         CGPathCloseSubpath(toPath);
         pathMorph.toValue = toPath;
         pathMorph.duration = 0.2;
@@ -458,7 +469,7 @@ class ZJRefreshControl: UIControl {
                         //如果在刷新时上拉，调整scrollview的扩展显示区域
                         
                         self.scrollView.contentInset = UIEdgeInsetsMake(self.originalContentInset.top - offset, self.originalContentInset.left, self.originalContentInset.bottom, self.originalContentInset.right);
-                        self.refreshActivity.center = CGPointMake(floor(self.frame.size.width / 2), totalViewHeight-showViewHeight+showViewHeight/2);
+                        self.refreshActivity.center = CGPointMake(floor(self.frame.size.width / 2), totalViewHeight - showViewHeight/2 + topOffset);
                     }
                 } else if (hasSectionHeaders) {
                     self.scrollView.contentInset = self.originalContentInset;
@@ -485,6 +496,7 @@ class ZJRefreshControl: UIControl {
         var triggered = false;
         
         let path = CGPathCreateMutable();
+        var transform = CGAffineTransformMakeTranslation(0,topOffset);
         
         let verticalShift = max(0, -((maxTopRadius + maxBottomRadius + maxTopPadding + maxBottomPadding) + offset));
         let distance = min(maxDistance, fabs(verticalShift));
@@ -508,23 +520,23 @@ class ZJRefreshControl: UIControl {
         }
         
         
-        CGPathAddArc(path, nil, topOrigin.x, topOrigin.y, currentTopRadius, 0, CGFloat(M_PI), true);
+        CGPathAddArc(path, &transform, topOrigin.x, topOrigin.y, currentTopRadius, 0, CGFloat(M_PI), true);
         
         
         let leftCp1 = CGPointMake(lerp((topOrigin.x - currentTopRadius), b: (bottomOrigin.x - currentBottomRadius), p: 0.1), lerp(topOrigin.y, b: bottomOrigin.y, p: 0.2));
         let leftCp2 = CGPointMake(lerp((topOrigin.x - currentTopRadius), b: (bottomOrigin.x - currentBottomRadius), p: 0.9), lerp(topOrigin.y, b: bottomOrigin.y, p: 0.2));
         let leftDestination = CGPointMake(bottomOrigin.x - currentBottomRadius, bottomOrigin.y);
         
-        CGPathAddCurveToPoint(path, nil, leftCp1.x, leftCp1.y, leftCp2.x, leftCp2.y, leftDestination.x, leftDestination.y);
+        CGPathAddCurveToPoint(path, &transform, leftCp1.x, leftCp1.y, leftCp2.x, leftCp2.y, leftDestination.x, leftDestination.y);
         
-        CGPathAddArc(path, nil, bottomOrigin.x, bottomOrigin.y, currentBottomRadius, CGFloat(M_PI), 0, true);
+        CGPathAddArc(path, &transform, bottomOrigin.x, bottomOrigin.y, currentBottomRadius, CGFloat(M_PI), 0, true);
         
         
         let rightCp2 = CGPointMake(lerp((topOrigin.x + currentTopRadius), b: (bottomOrigin.x + currentBottomRadius), p: 0.1), lerp(topOrigin.y, b: bottomOrigin.y, p: 0.2));
         let rightCp1 = CGPointMake(lerp((topOrigin.x + currentTopRadius), b: (bottomOrigin.x + currentBottomRadius), p: 0.9), lerp(topOrigin.y, b: bottomOrigin.y, p: 0.2));
         let rightDestination = CGPointMake(topOrigin.x + currentTopRadius, topOrigin.y);
         
-        CGPathAddCurveToPoint(path, nil, rightCp1.x, rightCp1.y, rightCp2.x, rightCp2.y, rightDestination.x, rightDestination.y);
+        CGPathAddCurveToPoint(path, &transform, rightCp1.x, rightCp1.y, rightCp2.x, rightCp2.y, rightDestination.x, rightDestination.y);
         CGPathCloseSubpath(path);
         if(isAnimating()){
             return;
@@ -539,19 +551,19 @@ class ZJRefreshControl: UIControl {
             let arrowBigRadius = currentArrowRadius + (currentArrowSize / 2);
             let arrowSmallRadius = currentArrowRadius - (currentArrowSize / 2);
             let arrowPath = CGPathCreateMutable();
-            CGPathAddArc(arrowPath, nil, topOrigin.x, topOrigin.y, arrowBigRadius, 0, CGFloat(3 * M_PI_2), false);
-            CGPathAddLineToPoint(arrowPath, nil, topOrigin.x, topOrigin.y - arrowBigRadius - currentArrowSize);
-            CGPathAddLineToPoint(arrowPath, nil, topOrigin.x + (2 * currentArrowSize), topOrigin.y - arrowBigRadius + (currentArrowSize / 2));
-            CGPathAddLineToPoint(arrowPath, nil, topOrigin.x, topOrigin.y - arrowBigRadius + (2 * currentArrowSize));
-            CGPathAddLineToPoint(arrowPath, nil, topOrigin.x, topOrigin.y - arrowBigRadius + currentArrowSize);
-            CGPathAddArc(arrowPath, nil, topOrigin.x, topOrigin.y, arrowSmallRadius, CGFloat(3 * M_PI_2), 0, true);
+            CGPathAddArc(arrowPath, &transform, topOrigin.x, topOrigin.y, arrowBigRadius, 0, CGFloat(3 * M_PI_2), false);
+            CGPathAddLineToPoint(arrowPath, &transform, topOrigin.x, topOrigin.y - arrowBigRadius - currentArrowSize);
+            CGPathAddLineToPoint(arrowPath, &transform, topOrigin.x + (2 * currentArrowSize), topOrigin.y - arrowBigRadius + (currentArrowSize / 2));
+            CGPathAddLineToPoint(arrowPath, &transform, topOrigin.x, topOrigin.y - arrowBigRadius + (2 * currentArrowSize));
+            CGPathAddLineToPoint(arrowPath, &transform, topOrigin.x, topOrigin.y - arrowBigRadius + currentArrowSize);
+            CGPathAddArc(arrowPath, &transform, topOrigin.x, topOrigin.y, arrowSmallRadius, CGFloat(3 * M_PI_2), 0, true);
             CGPathCloseSubpath(arrowPath);
             refreshArrowLayer.path = arrowPath;
             refreshArrowLayer.fillRule = kCAFillRuleEvenOdd;
             
             let highlightPath = CGPathCreateMutable();
-            CGPathAddArc(highlightPath, nil, topOrigin.x, topOrigin.y, currentTopRadius, 0, CGFloat(M_PI), true);
-            CGPathAddArc(highlightPath, nil, topOrigin.x, topOrigin.y + 1.25, currentTopRadius, CGFloat(M_PI), 0, false);
+            CGPathAddArc(highlightPath, &transform, topOrigin.x, topOrigin.y, currentTopRadius, 0, CGFloat(M_PI), true);
+            CGPathAddArc(highlightPath, &transform, topOrigin.x, topOrigin.y + 1.25, currentTopRadius, CGFloat(M_PI), 0, false);
             
             refreshHighlightLayer.path = highlightPath;
             refreshHighlightLayer.fillRule = kCAFillRuleNonZero;
