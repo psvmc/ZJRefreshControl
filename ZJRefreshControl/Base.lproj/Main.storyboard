@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="11201" systemVersion="16A323" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11161"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="ZJRefreshControl" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
+                        <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="A0q-uC-ldS">
+                                <subviews>
+                                    <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="grouped" separatorStyle="default" rowHeight="44" sectionHeaderHeight="18" sectionFooterHeight="18" translatesAutoresizingMaskIntoConstraints="NO" id="eIa-f3-bua">
+                                        <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
+                                    </tableView>
+                                </subviews>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstItem="eIa-f3-bua" firstAttribute="leading" secondItem="A0q-uC-ldS" secondAttribute="leading" id="Fk2-4B-RY3"/>
+                                    <constraint firstItem="eIa-f3-bua" firstAttribute="top" secondItem="A0q-uC-ldS" secondAttribute="top" constant="20" id="JgY-B5-L5p"/>
+                                    <constraint firstAttribute="bottom" secondItem="eIa-f3-bua" secondAttribute="bottom" id="fNP-JT-wMQ"/>
+                                    <constraint firstAttribute="trailing" secondItem="eIa-f3-bua" secondAttribute="trailing" id="fzv-16-RcV"/>
+                                </constraints>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="A0q-uC-ldS" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="topMargin" id="3Y9-Mf-AND"/>
+                            <constraint firstAttribute="trailing" secondItem="A0q-uC-ldS" secondAttribute="trailing" id="C7n-zR-lrC"/>
+                            <constraint firstAttribute="bottomMargin" secondItem="A0q-uC-ldS" secondAttribute="bottom" id="ZzA-Qu-H2T"/>
+                            <constraint firstItem="A0q-uC-ldS" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="svf-Hd-Ig8"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="tableView" destination="eIa-f3-bua" id="jcU-IV-K5C"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+        </scene>
+    </scenes>
+</document>
