@@ -256,11 +256,11 @@ class ZJRefreshControl: UIControl {
         let pathMorph = CABasicAnimation(keyPath: "path");
         let toPath = CGMutablePath();
         let radius = lerp(minBottomRadius, b: maxBottomRadius, p: 0.2);
-        toPath.addArc(center: topOrigin, radius: radius, startAngle: 0, endAngle: CGFloat(M_PI), clockwise: true, transform: transform);
+        toPath.addArc(center: topOrigin, radius: radius, startAngle: 0, endAngle: CGFloat(Double.pi), clockwise: true, transform: transform);
         let point1 = CGPoint(x: topOrigin.x - radius, y: topOrigin.y);
         toPath.addCurve(to: point1, control1: point1, control2: point1, transform: transform);
         let point2 = CGPoint(x: topOrigin.x + radius, y: topOrigin.y);
-        toPath.addArc(center: topOrigin, radius: radius, startAngle: CGFloat(M_PI), endAngle: 0, clockwise: true, transform: transform)
+        toPath.addArc(center: topOrigin, radius: radius, startAngle: CGFloat(Double.pi), endAngle: 0, clockwise: true, transform: transform)
         toPath.addCurve(to: point2, control1: point2, control2: point2, transform: transform);
         
         toPath.closeSubpath();
@@ -508,7 +508,7 @@ class ZJRefreshControl: UIControl {
         }
 
         //上半圆 顺时针
-        path.addArc(center: topOrigin, radius: currentTopRadius, startAngle: 0, endAngle: CGFloat(M_PI), clockwise: true, transform: transform);
+        path.addArc(center: topOrigin, radius: currentTopRadius, startAngle: 0, endAngle: CGFloat(Double.pi), clockwise: true, transform: transform);
         
         //左半边的贝塞尔曲线
         let leftCp1 = CGPoint(x: lerp((topOrigin.x - currentTopRadius), b: (bottomOrigin.x - currentBottomRadius), p: 0.1), y: lerp(topOrigin.y, b: bottomOrigin.y, p: 0.2));
@@ -517,7 +517,7 @@ class ZJRefreshControl: UIControl {
         path.addCurve(to: leftDestination, control1: leftCp1, control2: leftCp2, transform: transform);
         
         //下半圆
-        path.addArc(center: bottomOrigin, radius: currentBottomRadius, startAngle: CGFloat(M_PI), endAngle: 0, clockwise: true, transform: transform);
+        path.addArc(center: bottomOrigin, radius: currentBottomRadius, startAngle: CGFloat(Double.pi), endAngle: 0, clockwise: true, transform: transform);
         
         //右半边的贝塞尔曲线
         let rightCp2 = CGPoint(x: lerp((topOrigin.x + currentTopRadius), b: (bottomOrigin.x + currentBottomRadius), p: 0.1), y: lerp(topOrigin.y, b: bottomOrigin.y, p: 0.2));
@@ -539,19 +539,19 @@ class ZJRefreshControl: UIControl {
             let arrowBigRadius = currentArrowRadius + (currentArrowSize / 2);
             let arrowSmallRadius = currentArrowRadius - (currentArrowSize / 2);
             let arrowPath = CGMutablePath();
-            arrowPath.addArc(center: topOrigin, radius: arrowBigRadius, startAngle: 0, endAngle: CGFloat(3 * M_PI_2), clockwise: false, transform: transform);
+            arrowPath.addArc(center: topOrigin, radius: arrowBigRadius, startAngle: 0, endAngle: CGFloat(3 * Double.pi / 2), clockwise: false, transform: transform);
             arrowPath.addLine(to: CGPoint(x:topOrigin.x,y:topOrigin.y - arrowBigRadius - currentArrowSize), transform: transform);
             arrowPath.addLine(to: CGPoint(x:topOrigin.x + (2 * currentArrowSize),y:topOrigin.y - arrowBigRadius + (currentArrowSize / 2)), transform: transform);
             arrowPath.addLine(to: CGPoint(x:topOrigin.x,y:topOrigin.y - arrowBigRadius + (2 * currentArrowSize)), transform: transform);
             arrowPath.addLine(to: CGPoint(x:topOrigin.x,y:topOrigin.y - arrowBigRadius + currentArrowSize), transform: transform);
-            arrowPath.addArc(center: topOrigin, radius: arrowSmallRadius, startAngle: CGFloat(3 * M_PI_2), endAngle: 0, clockwise: true, transform: transform);
+            arrowPath.addArc(center: topOrigin, radius: arrowSmallRadius, startAngle: CGFloat(3 * Double.pi / 2), endAngle: 0, clockwise: true, transform: transform);
             arrowPath.closeSubpath();
             refreshArrowLayer.path = arrowPath;
             refreshArrowLayer.fillRule = kCAFillRuleEvenOdd;
             
             let highlightPath = CGMutablePath();
-            highlightPath.addArc(center: topOrigin, radius: currentTopRadius, startAngle: 0, endAngle: CGFloat(M_PI), clockwise: true, transform: transform);
-            highlightPath.addArc(center: CGPoint(x:topOrigin.x,y:topOrigin.y + 1.25), radius: currentTopRadius, startAngle: CGFloat(M_PI), endAngle: 0, clockwise: false, transform: transform);
+            highlightPath.addArc(center: topOrigin, radius: currentTopRadius, startAngle: 0, endAngle: CGFloat(Double.pi), clockwise: true, transform: transform);
+            highlightPath.addArc(center: CGPoint(x:topOrigin.x,y:topOrigin.y + 1.25), radius: currentTopRadius, startAngle: CGFloat(Double.pi), endAngle: 0, clockwise: false, transform: transform);
             
             refreshHighlightLayer.path = highlightPath;
             refreshHighlightLayer.fillRule = kCAFillRuleNonZero;
