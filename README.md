@@ -2,14 +2,16 @@
 
 `ios` `下拉刷新` `上拉加载更多` `swift`
 
-####简介
+
+#### 简介
+
 
 本组件效果参照了`ODRefreshControl`，用`swift`写成，添加了`上拉加载更多`  
 要使用本效果`swift`必须为`3.0`
 ####效果演示  
 ![效果演示](https://github.com/psvmc/ZJRefreshControl/raw/master/Images/refresh01.gif)
 
-####调用方式
+#### 调用方式
 
 （0）把该组件拖放到项目中  
 （1）定义全局对象变量
