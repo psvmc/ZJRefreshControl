@@ -15,7 +15,11 @@
 
 ## 调用方式
 
-（0）把该组件拖放到项目中  
+
+```
+pod 'ZJRefreshControl',git: 'https://github.com/psvmc/ZJRefreshControl.git'
+```
+
 （1）定义全局对象变量
 
 ```swift

@@ -1,12 +1,5 @@
-//
-//  ZJRefreshControl.swift
-//  ecms_ios
-//
-//  Created by PSVMC on 15/7/4.
-//
-//
 import UIKit
-class ZJRefreshControl: UIControl {
+open class ZJRefreshControl: UIControl {
     
     //一些常量
     fileprivate var totalViewHeight:CGFloat  =   568;
@@ -52,7 +45,7 @@ class ZJRefreshControl: UIControl {
     
     //刷新方法
     var refreshBlock:()->() = {};
-
+    
     //加载更多相关
     fileprivate var loadmoreBlock:()->() = {};
     
@@ -68,7 +61,7 @@ class ZJRefreshControl: UIControl {
     
     
     
-    required init?(coder aDecoder: NSCoder) {
+    required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder);
         fatalError("init(coder:) has not been implemented")
     }
@@ -95,7 +88,7 @@ class ZJRefreshControl: UIControl {
         //旋转图标
         self.refreshActivity = UIActivityIndicatorView(activityIndicatorStyle: self.activityIndicatorViewStyle);
         self.addSubview(refreshActivity);
-
+        
         shapeTintColor = UIColor(red: 155.0 / 255.0, green: 162.0 / 255.0, blue: 172.0 / 255.0, alpha: 1.0)
         layerAdd();
         
@@ -108,7 +101,6 @@ class ZJRefreshControl: UIControl {
         
         loadmoreViewAdd();
         hideRefreshView();
-        //self.backgroundColor = UIColor.blueColor()
     }
     
     //设置顶部偏移量
@@ -149,14 +141,14 @@ class ZJRefreshControl: UIControl {
                 self.ignoreInset = true;
                 blockScrollView?.contentInset = self.originalContentInset;
                 
-                }, completion: {
-                    (b) -> Void in
-                    blockScrollView?.contentInset = self.originalContentInset;
-                    self.ignoreInset = false;
-                    self.refreshActivityHide();
-                    self.layerRemove();
-                    self.layerAdd();
-                    self.hideRefreshView();
+            }, completion: {
+                (b) -> Void in
+                blockScrollView?.contentInset = self.originalContentInset;
+                self.ignoreInset = false;
+                self.refreshActivityHide();
+                self.layerRemove();
+                self.layerAdd();
+                self.hideRefreshView();
             })
             
             
@@ -200,11 +192,11 @@ class ZJRefreshControl: UIControl {
         UIView.animate(withDuration: 0.5, animations: {
             self.loadmoreActivity.alpha = 1;
             self.loadmoreActivity.layer.transform = CATransform3DMakeScale(1, 1, 1);
-            }, completion: {
-                (b) -> Void in
-                self.delay(0.5, closure: {
-                    self.loadmoreBlock();
-                })
+        }, completion: {
+            (b) -> Void in
+            self.delay(0.5, closure: {
+                self.loadmoreBlock();
+            })
         })
     }
     
@@ -214,10 +206,10 @@ class ZJRefreshControl: UIControl {
             self.loadmoreActivity.alpha = 0;
             self.loadmoreActivity.layer.transform = CATransform3DMakeScale(0.1, 0.1, 1);
             self.scrollView.contentInset.bottom -= self.showViewHeight;
-            }, completion: {
-                (b) -> Void in
-                self.scrollView.contentInset.bottom += self.showViewHeight;
-                self.loadmoreActivity.stopAnimating();
+        }, completion: {
+            (b) -> Void in
+            self.scrollView.contentInset.bottom += self.showViewHeight;
+            self.loadmoreActivity.stopAnimating();
         })
     }
     
@@ -309,40 +301,40 @@ class ZJRefreshControl: UIControl {
         CATransaction.commit();
         
         UIView.animate(withDuration: 0.2, delay: 0.25,
-            options: UIViewAnimationOptions.curveLinear,
-            animations: {
-                self.refreshActivity.alpha = 1;
-                self.refreshActivity.layer.transform = CATransform3DMakeScale(1, 1, 1);
-            },
-            completion: {
-                (b)->Void in
-                self.delay(0.5, closure: {
-                    self.refreshBlock();
-                })
-                
+                       options: UIViewAnimationOptions.curveLinear,
+                       animations: {
+                        self.refreshActivity.alpha = 1;
+                        self.refreshActivity.layer.transform = CATransform3DMakeScale(1, 1, 1);
+        },
+                       completion: {
+                        (b)->Void in
+                        self.delay(0.5, closure: {
+                            self.refreshBlock();
+                        })
+                        
         });
     }
     
     //刷新旋转消失
     fileprivate func refreshActivityHide()->Void{
         UIView.animate(withDuration: 0.1, delay: 0.15,
-            options: UIViewAnimationOptions.curveLinear,
-            animations: {
-                self.refreshActivity.alpha = 0;
-                self.refreshActivity.layer.transform = CATransform3DMakeScale(0.1, 0.1, 1);
-                self.refreshActivity.stopAnimating();
-            },
-            completion: {
-                (b)->Void in
-                //刷新后滚动到最上面
-                let rect = CGRect(x: 0, y: 0, width: self.scrollView.bounds.width, height: 10);
-                self.scrollView.scrollRectToVisible(rect, animated: true);
+                       options: UIViewAnimationOptions.curveLinear,
+                       animations: {
+                        self.refreshActivity.alpha = 0;
+                        self.refreshActivity.layer.transform = CATransform3DMakeScale(0.1, 0.1, 1);
+                        self.refreshActivity.stopAnimating();
+        },
+                       completion: {
+                        (b)->Void in
+                        //刷新后滚动到最上面
+                        let rect = CGRect(x: 0, y: 0, width: self.scrollView.bounds.width, height: 10);
+                        self.scrollView.scrollRectToVisible(rect, animated: true);
         });
     }
     
     
     
-    override var isEnabled: Bool  {
+    override open var isEnabled: Bool  {
         get {
             return super.isEnabled;
         }
@@ -352,7 +344,7 @@ class ZJRefreshControl: UIControl {
         }
     }
     
-    override var tintColor: UIColor!  {
+    override open var tintColor: UIColor!  {
         get {
             return super.tintColor;
         }
@@ -363,7 +355,7 @@ class ZJRefreshControl: UIControl {
     }
     
     
-    override func willMove(toSuperview newSuperview:UIView?) -> Void{
+    override open func willMove(toSuperview newSuperview:UIView?) -> Void{
         super.willMove(toSuperview: newSuperview);
         if (newSuperview == nil) {
             self.scrollView.removeObserver(self, forKeyPath: "contentOffset");
@@ -397,7 +389,7 @@ class ZJRefreshControl: UIControl {
     }
     
     //事件
-    override func observeValue(forKeyPath keyPath: String?, of ofObject: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) -> Void{
+    override open func observeValue(forKeyPath keyPath: String?, of ofObject: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) -> Void{
         
         if ( keyPath == "contentInset" ) {
             if (!ignoreInset) {
@@ -443,7 +435,7 @@ class ZJRefreshControl: UIControl {
         
         //修正autolayout中scrollview宽度的不准确
         self.frame = CGRect(x: 0, y: self.frame.origin.y, width: scrollView.frame.size.width, height: totalViewHeight);
-
+        
         let offset = (change![NSKeyValueChangeKey.newKey]! as AnyObject).cgPointValue.y + self.originalContentInset.top;
         if(offset == 0){
             self.hideRefreshView();
@@ -506,7 +498,7 @@ class ZJRefreshControl: UIControl {
                 triggered = true;
             }
         }
-
+        
         //上半圆 顺时针
         path.addArc(center: topOrigin, radius: currentTopRadius, startAngle: 0, endAngle: CGFloat(Double.pi), clockwise: true, transform: transform);
         
@@ -567,3 +559,4 @@ class ZJRefreshControl: UIControl {
         
     }
 }
+
