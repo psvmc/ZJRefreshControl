@@ -44,10 +44,10 @@ open class ZJRefreshControl: UIControl {
     fileprivate var topOrigin = CGPoint.zero;
     
     //刷新方法
-    var refreshBlock:()->() = {};
+    public var refreshBlock:()->() = {};
     
     //加载更多相关
-    fileprivate var loadmoreBlock:()->() = {};
+    public var loadmoreBlock:()->() = {};
     
     //是否加载更多
     fileprivate var loadmore = false;
@@ -66,11 +66,11 @@ open class ZJRefreshControl: UIControl {
         fatalError("init(coder:) has not been implemented")
     }
     
-    convenience init(scrollView:UIScrollView,refreshBlock:@escaping ()->(),loadmoreBlock:@escaping ()->()){
+    public convenience init(scrollView:UIScrollView,refreshBlock:@escaping ()->(),loadmoreBlock:@escaping ()->()){
         self.init(scrollView: scrollView,activityIndicatorView:nil,refreshBlock: refreshBlock,loadmoreBlock: loadmoreBlock);
     }
     
-    convenience init(scrollView:UIScrollView,refreshBlock:@escaping ()->()){
+    public convenience init(scrollView:UIScrollView,refreshBlock:@escaping ()->()){
         self.init(scrollView: scrollView,activityIndicatorView:nil,refreshBlock: refreshBlock,loadmoreBlock: {});
         self.loadmore = false;
     }
@@ -132,15 +132,13 @@ open class ZJRefreshControl: UIControl {
     
     
     //刷新结束 记得调用该方法
-    internal func endRefreshing() -> Void{
+    open func endRefreshing() -> Void{
         if (self.refreshing) {
             self.refreshing = false;
             let blockScrollView = self.scrollView;
-            
             UIView.animate(withDuration: 0.15, animations: {
                 self.ignoreInset = true;
                 blockScrollView?.contentInset = self.originalContentInset;
-                
             }, completion: {
                 (b) -> Void in
                 blockScrollView?.contentInset = self.originalContentInset;
@@ -150,20 +148,13 @@ open class ZJRefreshControl: UIControl {
                 self.layerAdd();
                 self.hideRefreshView();
             })
-            
-            
         }
     }
     
     //加载结束 记得调用该方法
-    internal func endLoadingmore() -> Void{
+    open func endLoadingmore() -> Void{
         self.loadingmore = false;
         self.loadmoreHide();
-    }
-    
-    fileprivate func delay(_ delay:Double, closure:@escaping ()->()) {
-        DispatchQueue.main.asyncAfter(
-            deadline: DispatchTime.now() + Double(Int64(delay * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC), execute: closure)
     }
     
     //加载更多视图的添加
@@ -194,9 +185,7 @@ open class ZJRefreshControl: UIControl {
             self.loadmoreActivity.layer.transform = CATransform3DMakeScale(1, 1, 1);
         }, completion: {
             (b) -> Void in
-            self.delay(0.5, closure: {
-                self.loadmoreBlock();
-            })
+            self.loadmoreBlock();
         })
     }
     
@@ -308,9 +297,7 @@ open class ZJRefreshControl: UIControl {
         },
                        completion: {
                         (b)->Void in
-                        self.delay(0.5, closure: {
-                            self.refreshBlock();
-                        })
+                        self.refreshBlock();
                         
         });
     }
